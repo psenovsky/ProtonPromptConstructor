@@ -12,6 +12,7 @@ class PromptState:
 
 def build_prompt(state: PromptState, options: dict, exclusive_groups: list) -> str:
     parts: list[str] = []
+    prefixes: list[str] = []
     disabled_vars: set[str] = set()
 
     active_booleans = {name for name, val in state.bool_options.items() if val}
@@ -28,12 +29,15 @@ def build_prompt(state: PromptState, options: dict, exclusive_groups: list) -> s
             continue
         for req in opt.requires:
             if req not in active_booleans:
-                disabled_vars.add(opt.env_var)
+                if opt.env_var:
+                    disabled_vars.add(opt.env_var)
                 break
-        if opt.env_var in disabled_vars:
+        if opt.env_var and opt.env_var in disabled_vars:
             continue
-        value = "1"
-        parts.append(f"{opt.env_var}={value}")
+        if opt.command:
+            prefixes.append(opt.command)
+        else:
+            parts.append(f"{opt.env_var}=1")
 
     for name, value in state.text_options.items():
         if not value.strip():
@@ -65,5 +69,5 @@ def build_prompt(state: PromptState, options: dict, exclusive_groups: list) -> s
             continue
         parts.append(f"{opt.env_var}={int(value) if value == int(value) else value}")
 
-    parts.append("%command%")
-    return " ".join(parts)
+    result_parts = prefixes + parts + ["%command%"]
+    return " ".join(result_parts)

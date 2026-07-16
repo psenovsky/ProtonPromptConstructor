@@ -18,6 +18,7 @@ class Option:
     description: str
     option_type: OptionType = OptionType.BOOL
     compat_config: str = ""
+    command: str = ""
     default_value: str | int | None = None
     min_value: int | None = None
     max_value: int | None = None
@@ -336,4 +337,12 @@ CMDLINE_APPEND = _register(Option(
     description="Extra arguments appended to the game command",
     option_type=OptionType.TEXT,
     info="Separate multiple arguments with commas. Escape with backslash.",
+))
+
+MANGOHUD = _register(Option(
+    name="mangohud",
+    env_var="",
+    command="mangohud",
+    description="Enable MangoHud overlay (FPS, temps, etc.)",
+    info="Requires MangoHud to be installed on the system.",
 ))

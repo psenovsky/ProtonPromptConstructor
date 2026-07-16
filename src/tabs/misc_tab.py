@@ -24,6 +24,7 @@ from ..models import (
     HOST_LC_ALL,
     PROTON_LOG,
     CMDLINE_APPEND,
+    MANGOHUD,
 )
 
 
@@ -35,8 +36,13 @@ class MiscTab(QWidget):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        compat_group = QGroupBox("Compatibility")
+        compat_group = QGroupBox("Compatibility & Overlay")
         compat_layout = QVBoxLayout()
+
+        self._mangohud = QCheckBox(MANGOHUD.description)
+        self._mangohud.setToolTip(MANGOHUD.info)
+        self._mangohud.toggled.connect(lambda: self.state_changed.emit())
+        compat_layout.addWidget(self._mangohud)
 
         self._forcelgadd = QCheckBox(FORCELGADD.description)
         self._forcelgadd.toggled.connect(lambda: self.state_changed.emit())
@@ -134,6 +140,7 @@ class MiscTab(QWidget):
         cmdline_text = self._cmdline.toPlainText().strip()
         cmdline_text = cmdline_text.replace("\n", ",")
         return {
+            MANGOHUD.name: self._mangohud.isChecked(),
             FORCELGADD.name: self._forcelgadd.isChecked(),
             HEAP_DELAY_FREE.name: self._heapdelayfree.isChecked(),
             OLD_GL_STRING.name: self._oldglstr.isChecked(),
@@ -150,6 +157,7 @@ class MiscTab(QWidget):
 
     def set_state(self, state: dict) -> None:
         self.blockSignals(True)
+        self._mangohud.setChecked(state.get(MANGOHUD.name, False))
         self._forcelgadd.setChecked(state.get(FORCELGADD.name, False))
         self._heapdelayfree.setChecked(state.get(HEAP_DELAY_FREE.name, False))
         self._oldglstr.setChecked(state.get(OLD_GL_STRING.name, False))
