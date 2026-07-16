@@ -3,9 +3,9 @@ from __future__ import annotations
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QGroupBox,
     QLabel,
-    QLineEdit,
     QRadioButton,
     QSlider,
     QVBoxLayout,
@@ -114,9 +114,21 @@ class UpscalingTab(QWidget):
 
         custom_label = QLabel(f"{FSR_CUSTOM_MODE.description}:")
         glayout.addWidget(custom_label)
-        self._fsr_custom = QLineEdit()
-        self._fsr_custom.setPlaceholderText("e.g. 1280x720")
-        self._fsr_custom.textChanged.connect(lambda: self.state_changed.emit())
+        self._fsr_custom = QComboBox()
+        self._fsr_custom.setEditable(True)
+        self._fsr_custom.addItems([
+            "1280x720",
+            "1600x900",
+            "1920x1080",
+            "2560x1440",
+            "3840x2160",
+            "1024x768",
+            "1680x1050",
+            "2560x1600",
+        ])
+        self._fsr_custom.setCurrentText("")
+        self._fsr_custom.setPlaceholderText("Select or type custom resolution")
+        self._fsr_custom.currentTextChanged.connect(lambda: self.state_changed.emit())
         glayout.addWidget(self._fsr_custom)
 
         group.setLayout(glayout)
@@ -160,6 +172,6 @@ class UpscalingTab(QWidget):
             FSR4_RDNA3.name: fsr_active and self._fsr4rdna3.isChecked(),
             FSR4_HUD.name: fsr_active and self._fsr4_hud.isChecked(),
             FSR_STRENGTH.name: self._fsr_strength.value(),
-            FSR_CUSTOM_MODE.name: self._fsr_custom.text() if fsr_active else "",
+            FSR_CUSTOM_MODE.name: self._fsr_custom.currentText() if fsr_active else "",
             DLSS_HUD.name: dlss_active and self._dlss_hud.isChecked(),
         }
