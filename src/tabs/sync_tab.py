@@ -63,3 +63,10 @@ class SyncTab(QWidget):
             NOFSYNC.name: self._nofsync.isChecked(),
             NONTSYNC.name: self._nontsync.isChecked(),
         }
+
+    def set_state(self, state: dict) -> None:
+        self.blockSignals(True)
+        self._noesync.setChecked(state.get(NOESYNC.name, False))
+        self._nofsync.setChecked(state.get(NOFSYNC.name, False))
+        self._nontsync.setChecked(state.get(NONTSYNC.name, False))
+        self.blockSignals(False)

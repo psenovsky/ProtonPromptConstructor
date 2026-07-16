@@ -42,3 +42,9 @@ class InputTab(QWidget):
             SDL_INPUT.name: self._sdl.isChecked(),
             XALIA.name: self._xalia.isChecked(),
         }
+
+    def set_state(self, state: dict) -> None:
+        self.blockSignals(True)
+        self._sdl.setChecked(state.get(SDL_INPUT.name, False))
+        self._xalia.setChecked(state.get(XALIA.name, False))
+        self.blockSignals(False)

@@ -91,3 +91,15 @@ class RenderingTab(QWidget):
             NOD3D11.name: False if use_wined3d else self._nod3d11.isChecked(),
             NOD3D12.name: False if use_wined3d else self._nod3d12.isChecked(),
         }
+
+    def set_state(self, state: dict) -> None:
+        self.blockSignals(True)
+        wined3d = state.get(WINED3D.name, False)
+        self._wined3d.setChecked(wined3d)
+        self._dxvk.setChecked(not wined3d)
+        self._nod3d9.setChecked(state.get(NOD3D9.name, False))
+        self._nod3d10.setChecked(state.get(NOD3D10.name, False))
+        self._nod3d11.setChecked(state.get(NOD3D11.name, False))
+        self._nod3d12.setChecked(state.get(NOD3D12.name, False))
+        self._dx_group.setEnabled(not wined3d)
+        self.blockSignals(False)

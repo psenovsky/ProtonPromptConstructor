@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from .config import load_defaults, save_defaults
 from .models import ALL_OPTIONS, MUTUALLY_EXCLUSIVE_GROUPS
 from .prompt_builder import PromptState, build_prompt
 from .tabs.display_tab import DisplayTab
@@ -63,6 +64,26 @@ class MainWindow(QMainWindow):
         for tab in self._all_tabs:
             tab.state_changed.connect(self._update_prompt)
 
+        defaults_bar = QHBoxLayout()
+        defaults_label = QLabel("Defaults:")
+        defaults_label.setStyleSheet("font-weight: bold;")
+        defaults_bar.addWidget(defaults_label)
+
+        self._save_defaults_btn = QPushButton("Save as Default")
+        self._save_defaults_btn.clicked.connect(self._save_defaults)
+        defaults_bar.addWidget(self._save_defaults_btn)
+
+        self._load_defaults_btn = QPushButton("Load Defaults")
+        self._load_defaults_btn.clicked.connect(self._load_defaults)
+        defaults_bar.addWidget(self._load_defaults_btn)
+
+        self._reset_btn = QPushButton("Reset All")
+        self._reset_btn.clicked.connect(self._reset_all)
+        defaults_bar.addWidget(self._reset_btn)
+
+        defaults_bar.addStretch()
+        main_layout.addLayout(defaults_bar)
+
         prompt_group = QVBoxLayout()
 
         prompt_header = QHBoxLayout()
@@ -93,6 +114,7 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(prompt_group)
 
         self._update_prompt()
+        self._auto_load_defaults()
 
     def _collect_state(self) -> PromptState:
         state = PromptState()
@@ -116,3 +138,30 @@ class MainWindow(QMainWindow):
         clipboard = QApplication.clipboard()
         if clipboard is not None:
             clipboard.setText(self._prompt_display.toPlainText())
+
+    def _collect_flat_state(self) -> dict:
+        flat: dict = {}
+        for tab in self._all_tabs:
+            flat.update(tab.get_state())
+        return flat
+
+    def _apply_state(self, state: dict) -> None:
+        for tab in self._all_tabs:
+            tab.set_state(state)
+        self._update_prompt()
+
+    def _save_defaults(self) -> None:
+        save_defaults(self._collect_flat_state())
+
+    def _load_defaults(self) -> None:
+        defaults = load_defaults()
+        if defaults is not None:
+            self._apply_state(defaults)
+
+    def _auto_load_defaults(self) -> None:
+        defaults = load_defaults()
+        if defaults is not None:
+            self._apply_state(defaults)
+
+    def _reset_all(self) -> None:
+        self._apply_state({})

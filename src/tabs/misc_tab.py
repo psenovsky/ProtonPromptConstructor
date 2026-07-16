@@ -147,3 +147,20 @@ class MiscTab(QWidget):
             HOST_LC_ALL.name: self._lc_all.text(),
             CMDLINE_APPEND.name: cmdline_text,
         }
+
+    def set_state(self, state: dict) -> None:
+        self.blockSignals(True)
+        self._forcelgadd.setChecked(state.get(FORCELGADD.name, False))
+        self._heapdelayfree.setChecked(state.get(HEAP_DELAY_FREE.name, False))
+        self._oldglstr.setChecked(state.get(OLD_GL_STRING.name, False))
+        self._seccomp.setChecked(state.get(SECCOMP.name, False))
+        self._nowritewatch.setChecked(state.get(NOWRITEWATCH.name, False))
+        self._wow64.setChecked(state.get(WOW64.name, False))
+        self._dxgi.setChecked(state.get(DXGI_DEVICE_MANAGER.name, False))
+        self._mediaconv.setChecked(state.get(MEDIA_CONV.name, False))
+        self._copyprefix.setChecked(state.get(COPY_PREFIX.name, False))
+        self._proton_log.setChecked(state.get(PROTON_LOG.name, False))
+        self._lc_all.setText(state.get(HOST_LC_ALL.name, ""))
+        cmdline = state.get(CMDLINE_APPEND.name, "")
+        self._cmdline.setPlainText(cmdline.replace(",", "\n"))
+        self.blockSignals(False)

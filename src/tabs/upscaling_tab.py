@@ -175,3 +175,26 @@ class UpscalingTab(QWidget):
             FSR_CUSTOM_MODE.name: self._fsr_custom.currentText() if fsr_active else "",
             DLSS_HUD.name: dlss_active and self._dlss_hud.isChecked(),
         }
+
+    def set_state(self, state: dict) -> None:
+        self.blockSignals(True)
+        fsr = state.get(FSR.name, False)
+        dlss = state.get(DLSS.name, False)
+        self._fsr.setChecked(fsr)
+        self._dlss.setChecked(dlss)
+        self._xess.setChecked(state.get(XESS.name, False))
+        self._none.setChecked(not fsr and not dlss and not state.get(XESS.name, False))
+        self._fsr3.setChecked(state.get(FSR3.name, False))
+        self._fsr4.setChecked(state.get(FSR4.name, False))
+        self._fsr4rdna3.setChecked(state.get(FSR4_RDNA3.name, False))
+        self._fsr4_hud.setChecked(state.get(FSR4_HUD.name, False))
+        self._fsr_strength.setValue(int(state.get(FSR_STRENGTH.name, FSR_STRENGTH.default_value)))
+        custom = state.get(FSR_CUSTOM_MODE.name, "")
+        idx = self._fsr_custom.findText(custom)
+        if idx >= 0:
+            self._fsr_custom.setCurrentIndex(idx)
+        else:
+            self._fsr_custom.setEditText(custom)
+        self._dlss_hud.setChecked(state.get(DLSS_HUD.name, False))
+        self._update_visibility()
+        self.blockSignals(False)

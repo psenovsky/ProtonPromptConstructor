@@ -101,3 +101,15 @@ class DisplayTab(QWidget):
             WAYLAND_MONITOR.name: self._monitor_input.text(),
             WAYLAND_RAWINPUT.name: self._rawinput_slider.value() / 10,
         }
+
+    def set_state(self, state: dict) -> None:
+        self.blockSignals(True)
+        hdr = state.get(HDR.name, False)
+        self._hdr.setChecked(hdr)
+        self._on_hdr_toggled(hdr)
+        self._wayland.setChecked(state.get(WAYLAND.name, False))
+        self._monitor_input.setText(state.get(WAYLAND_MONITOR.name, ""))
+        raw = state.get(WAYLAND_RAWINPUT.name, 0)
+        self._rawinput_slider.setValue(int(raw * 10))
+        self._update_wayland_controls()
+        self.blockSignals(False)
