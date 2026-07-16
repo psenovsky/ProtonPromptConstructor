@@ -1,0 +1,8 @@
+[project]
+name = "proton-prompt-constructor"
+version = "0.1.0"
+description = "GUI for constructing game launch prompts in Steam with Proton GE"
+requires-python = ">=3.10"
+dependencies = [
+    "PyQt6",
+]
