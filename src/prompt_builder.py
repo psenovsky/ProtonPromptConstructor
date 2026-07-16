@@ -1,73 +1,93 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from src.models import Group, Option
 
 
-@dataclass
-class PromptState:
-    bool_options: dict[str, bool] = field(default_factory=dict)
-    text_options: dict[str, str] = field(default_factory=dict)
-    slider_options: dict[str, float] = field(default_factory=dict)
-
-
-def build_prompt(state: PromptState, options: dict, exclusive_groups: list) -> str:
+def build_prompt(state: dict[str, object], groups: list[Group]) -> str:
     parts: list[str] = []
     prefixes: list[str] = []
-    disabled_vars: set[str] = set()
 
-    active_booleans = {name for name, val in state.bool_options.items() if val}
-
-    for group in exclusive_groups:
-        active_in_group = [name for name in group.options if name in active_booleans]
-        if len(active_in_group) > 1:
-            for name in active_in_group[1:]:
-                active_booleans.discard(name)
-
-    for name in active_booleans:
-        opt = options.get(name)
-        if opt is None:
-            continue
-        for req in opt.requires:
-            if req not in active_booleans:
-                if opt.env_var:
-                    disabled_vars.add(opt.env_var)
-                break
-        if opt.env_var and opt.env_var in disabled_vars:
-            continue
-        if opt.command:
-            prefixes.append(opt.command)
-        else:
-            parts.append(f"{opt.env_var}=1")
-
-    for name, value in state.text_options.items():
-        if not value.strip():
-            continue
-        opt = options.get(name)
-        if opt is None:
-            continue
-        if opt.requires:
-            req_met = any(r in active_booleans for r in opt.requires)
-            if not req_met:
-                continue
-        if opt.env_var == "cmdlineappend":
-            for part in value.split(","):
-                part = part.strip()
-                if part:
-                    parts.append(f"cmdlineappend:{part}")
-        else:
-            parts.append(f"{opt.env_var}={value}")
-
-    for name, value in state.slider_options.items():
-        opt = options.get(name)
-        if opt is None:
-            continue
-        if opt.requires:
-            req_met = any(r in active_booleans for r in opt.requires)
-            if not req_met:
-                continue
-        if value == opt.default_value:
-            continue
-        parts.append(f"{opt.env_var}={int(value) if value == int(value) else value}")
+    for group in groups:
+        _process_group(group, state, parts, prefixes)
 
     result_parts = prefixes + parts + ["%command%"]
     return " ".join(result_parts)
+
+
+def _process_group(
+    group: Group,
+    state: dict[str, object],
+    parts: list[str],
+    prefixes: list[str],
+) -> None:
+    active_exclusive: list[str] = []
+
+    for child in group.children:
+        if isinstance(child, Option):
+            _process_option(
+                child, state, parts, prefixes,
+                active_exclusive if group.exclusive_children else [],
+            )
+        elif isinstance(child, Group):
+            _process_group(child, state, parts, prefixes)
+
+
+def _process_option(
+    option: Option,
+    state: dict[str, object],
+    parts: list[str],
+    prefixes: list[str],
+    active_exclusive: list[str] | None = None,
+) -> None:
+    value = state.get(option.key, option.default)
+
+    if option.condition and not option.condition(state):
+        return
+
+    if option.requires:
+        req_met = all(state.get(req, False) for req in option.requires)
+        if not req_met:
+            return
+
+    if active_exclusive is not None:
+        will_emit = False
+        if isinstance(value, bool) and value:
+            will_emit = True
+        elif isinstance(value, (int, float)) and value != option.default:
+            will_emit = True
+        elif isinstance(value, str) and value:
+            will_emit = True
+
+        if will_emit:
+            if len(active_exclusive) > 0:
+                return
+            active_exclusive.append(option.key)
+
+    if isinstance(value, bool):
+        if value:
+            if option.prefix:
+                prefixes.append(option.prefix)
+            elif option.env_key:
+                parts.append(f"{option.env_key}=1")
+    elif isinstance(value, (int, float)):
+        if value != option.default:
+            if option.env_key:
+                parts.append(f"{option.env_key}={int(value) if value == int(value) else value}")
+    elif isinstance(value, str):
+        if value:
+            if option.cmdlineappend:
+                for arg in value.split(","):
+                    arg = arg.strip()
+                    if arg:
+                        parts.append(f"cmdlineappend:{arg}")
+            elif option.env_key:
+                parts.append(f"{option.env_key}={value}")
+
+    if option.children and value:
+        child_exclusive: list[str] = []
+        for child in option.children:
+            if isinstance(child, Option):
+                _process_option(
+                    child, state, parts, prefixes,
+                    child_exclusive if option.exclusive_children else None,
+                )

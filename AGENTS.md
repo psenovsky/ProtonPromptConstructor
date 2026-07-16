@@ -102,8 +102,6 @@ Environment variable options:
 
 Some optins are mutually exclusive and the GUI needs to reflect that. It would be nice if we were able to detect some system properties to limit available options.
 
-As you can see the problem is relatively complex, so first formulate plan and save its copy into file `PLAN.md`.
-
 ### phase 2: poolishing up the GUI
 
 TODO
