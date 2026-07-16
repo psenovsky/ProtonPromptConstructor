@@ -85,22 +85,32 @@ class MiscTab(QWidget):
         video_group.setLayout(video_layout)
         layout.addWidget(video_group)
 
-        debug_group = QGroupBox("Debug & Locale")
-        debug_layout = QVBoxLayout()
+        troubleshoot_group = QGroupBox("Troubleshooting")
+        troubleshoot_layout = QVBoxLayout()
 
         self._proton_log = QCheckBox(PROTON_LOG.description)
+        self._proton_log.setToolTip(
+            "Creates a log file at ~/steam-$APPID.log. "
+            "Use this when a game fails to launch or crashes to help diagnose the issue."
+        )
         self._proton_log.toggled.connect(lambda: self.state_changed.emit())
-        debug_layout.addWidget(self._proton_log)
+        troubleshoot_layout.addWidget(self._proton_log)
+
+        troubleshoot_group.setLayout(troubleshoot_layout)
+        layout.addWidget(troubleshoot_group)
+
+        locale_group = QGroupBox("Locale")
+        locale_layout = QVBoxLayout()
 
         lc_all_label = QLabel(f"{HOST_LC_ALL.description}:")
-        debug_layout.addWidget(lc_all_label)
+        locale_layout.addWidget(lc_all_label)
         self._lc_all = QLineEdit()
         self._lc_all.setPlaceholderText("e.g. en_US.UTF-8")
         self._lc_all.textChanged.connect(lambda: self.state_changed.emit())
-        debug_layout.addWidget(self._lc_all)
+        locale_layout.addWidget(self._lc_all)
 
-        debug_group.setLayout(debug_layout)
-        layout.addWidget(debug_group)
+        locale_group.setLayout(locale_layout)
+        layout.addWidget(locale_group)
 
         cmdline_group = QGroupBox("Extra Arguments")
         cmdline_layout = QVBoxLayout()
